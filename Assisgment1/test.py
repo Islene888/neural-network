@@ -41,7 +41,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.utils import to_categorical
 
 # 载入图像数据
-data_path = "D:/Notets/python/Neurons0/Assisgment/mnist_images"
+data_path = "/Assisgment1/mnist_images"
 
 image_size = (20, 20)
 num_classes = 10
@@ -112,6 +112,6 @@ def predict_image(image_path):
 
 
 # 示例预测
-test_image_path = "D:/Notets/python/Neurons0/Assisgment/mnist_images/5_5.png"  # 示例测试图像路径
+test_image_path = "/Assisgment1/mnist_images/5_5.png"  # 示例测试图像路径
 prediction = predict_image(test_image_path)
 print("Predicted Label:", prediction)
