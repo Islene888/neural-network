@@ -41,7 +41,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.utils import to_categorical
 
 # 载入图像数据
-data_path = "/Assisgment1/mnist_images"
+data_path = "Assisgment1/mnist_images"
 
 image_size = (20, 20)
 num_classes = 10
