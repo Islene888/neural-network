@@ -1,35 +1,46 @@
-import numpy as np
-import tensorflow as tf
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Flatten
+from sklearn.model_selection import train_test_split
 
+# Load the dataset
+(X, y), (X_test, y_test) = mnist.load_data()
 
-def create_model():
-    model = Sequential([
-        Dense(10, activation='relu', input_shape=(10,)),  # Input layer with 10 features
-        Dense(8, activation='relu'),  # Second layer
-        Dense(8, activation='relu'),  # Third layer
-        Dense(4, activation='relu'),  # Fourth layer
-        Dense(1, activation='sigmoid')  # Output layer
-    ])
-    model.compile(optimizer='adam',
-                  loss='binary_crossentropy',
-                  metrics=['accuracy'])
-    return model
+# Filter out only the images for digits 0 and 1
+filter_indices = (y == 0) | (y == 1)
+X, y = X[filter_indices], y[filter_indices]
+filter_indices_test = (y_test == 0) | (y_test == 1)
+X_test, y_test = X_test[filter_indices_test], y_test[filter_indices_test]
 
+# Normalize the images from 0-255 to 0-1
+X = X / 255.0
+X_test = X_test / 255.0
 
-def generate_dataset(num_samples=1000, num_features=10):
-    np.random.seed(42)
-    X = np.random.rand(num_samples, num_features)
-    y = np.random.randint(2, size=num_samples)
-    return X, y
+# Flatten the images for the MLP (multilayer perceptron)
+X = X.reshape((-1, 28*28))
+X_test = X_test.reshape((-1, 28*28))
 
+# Split the dataset into training and validation sets
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-if __name__ == "__main__":
-    model = create_model()
+# Build the binary classification model
+model = Sequential([
+    Flatten(input_shape=(28*28,)),
+    Dense(10, activation='relu'),
+    Dense(8, activation='relu'),
+    Dense(8, activation='relu'),
+    Dense(4, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
 
-    X_train, y_train = generate_dataset()
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
 
-    model.fit(X_train, y_train, epochs=10, validation_split=0.2)
+# Train the model
+model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val))
 
-    model.summary()
+# Evaluate the model
+test_loss, test_acc = model.evaluate(X_test, y_test)
+print(f'Test accuracy: {test_acc}')
