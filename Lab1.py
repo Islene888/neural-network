@@ -1,49 +1,42 @@
-from tensorflow.keras.datasets import mnist
+import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import Dense, Dropout
+from sklearn.datasets import make_moons
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.preprocessing import StandardScaler
 
-# Load the dataset
-(X, y), (X_test, y_test) = mnist.load_data()
+# 生成更有代表性的数据集
+X, y = make_moons(n_samples=1000, noise=0.2, random_state=42)
+y = y.reshape(-1, 1)  # 调整标签的形状以符合模型的输入
 
-# Filter out only the images for digits 8 and 9 for both training and test datasets
-filter_indices = (y == 8) | (y == 9)
-X, y = X[filter_indices], y[filter_indices] - 8  # Adjust labels to be 0 and 1
-filter_indices_test = (y_test == 8) | (y_test == 9)
-X_test, y_test = X_test[filter_indices_test], y_test[filter_indices_test] - 8  # Adjust labels to be 0 and 1
+# 数据预处理
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Normalize the images from 0-255 to 0-1
-X = X / 255.0
-X_test = X_test / 255.0
+# 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
-# Flatten the images for the MLP (multilayer perceptron)
-X = X.reshape((-1, 28*28))
-X_test = X_test.reshape((-1, 28*28))
-
-# Split the dataset into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Build the binary classification model
+# 定义模型
 model = Sequential([
-    Flatten(input_shape=(28*28,)),
-    Dense(10, activation='relu'),
-    Dense(8, activation='relu'),
-    Dense(8, activation='relu'),
-    Dense(4, activation='relu'),
-    Dense(1, activation='sigmoid')
+    Dense(10, activation='relu', input_shape=(X_train.shape[1],)),  # 输入层
+    Dropout(0.1),  # Dropout层减少过拟合
+    Dense(8, activation='relu'),  # 隐藏层
+    Dense(8, activation='relu'),  # 隐藏层
+    Dense(4, activation='relu'),  # 隐藏层
+    Dense(1, activation='sigmoid')  # 输出层
 ])
 
 model.compile(optimizer='adam',
               loss='binary_crossentropy',
               metrics=['accuracy'])
 
-# EarlyStopping callback to stop training when the validation loss stops improving
-early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+# 训练模型
+history = model.fit(X_train, y_train, epochs=100, validation_data=(X_test, y_test))
 
-# Train the model
-model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val), callbacks=[early_stopping])
+# 模型摘要
+model.summary()
 
-# Evaluate the model
-test_loss, test_acc = model.evaluate(X_test, y_test)
-print(f'Test accuracy: {test_acc}')
+# 评估模型
+_, accuracy = model.evaluate(X_test, y_test)
+print('Accuracy: %.2f' % (accuracy * 100))
